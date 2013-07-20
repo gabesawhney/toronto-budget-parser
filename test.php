@@ -29,7 +29,7 @@ foreach ($allfiles as $thisfile) {
 foreach ($thefiles as $thisfile) {
 	$inputFileName = $datafolder . $thisfile;
 	//$inputFileName = 'Examples/01simple.xlsx';
-	echo pathinfo($inputFileName,PATHINFO_BASENAME).": ".PHP_EOL;
+	echo pathinfo($inputFileName,PATHINFO_BASENAME).": ";
 
 	$inputFileType = PHPExcel_IOFactory::identify($inputFileName);
 	$objReader = PHPExcel_IOFactory::createReader($inputFileType);
@@ -42,8 +42,10 @@ foreach ($thefiles as $thisfile) {
 
 	//get rid of empty cells
 	$maxCell = $sheetObj->getHighestRowAndColumn();
-	$sheetData = $sheetObj->rangeToArray('A1:' . $maxCell['column'] . $maxCell['row'],null,false,false,false);
+	$sheetData = $sheetObj->rangeToArray('A1:' . $maxCell['column'] . $maxCell['row'],null,true,true,false);
 
+/* forget about this now that we're looking for keywords
+ 
 	//get rid of empty cells (part 2)
 	foreach($sheetData as $key => &$row) {
 		$row = array_filter($row,
@@ -57,12 +59,21 @@ foreach ($thefiles as $thisfile) {
 		}
 	}
 	unset($row);
+*/
 
-foreach($sheetData as $key => $row) {
-//print count($row);
-	print sprintf("%2d ",count($row));
-}
-print PHP_EOL;
+//	$search = "Salaries and Benefits";
+	$search = "alarie";
+	foreach($sheetData as $colnum => $row) {
+		foreach($row as $rownum => $cell) {
+//			if ($cell == $search) {
+//			if ( strpos($cell,$search) > 0 ) {
+			if ( preg_match('/alarie/', $cell) ) {
+				print $cell.PHP_EOL;
+			} else {
+				print "NO MATCH: ".$cell.PHP_EOL;
+			}
+		}
+	}
 
 	unset($sheetData);
 }
