@@ -29,7 +29,7 @@ foreach ($allfiles as $thisfile) {
 foreach ($thefiles as $thisfile) {
 	$inputFileName = $datafolder . $thisfile;
 	//$inputFileName = 'Examples/01simple.xlsx';
-	echo 'Loading file '.pathinfo($inputFileName,PATHINFO_BASENAME).": ";
+	echo pathinfo($inputFileName,PATHINFO_BASENAME).": ".PHP_EOL;
 
 	$inputFileType = PHPExcel_IOFactory::identify($inputFileName);
 	$objReader = PHPExcel_IOFactory::createReader($inputFileType);
@@ -42,7 +42,7 @@ foreach ($thefiles as $thisfile) {
 
 	//get rid of empty cells
 	$maxCell = $sheetObj->getHighestRowAndColumn();
-	$sheetData = $sheetObj->rangeToArray('A1:' . $maxCell['column'] . $maxCell['row'],null,true,true,true);
+	$sheetData = $sheetObj->rangeToArray('A1:' . $maxCell['column'] . $maxCell['row'],null,false,false,false);
 
 	//get rid of empty cells (part 2)
 	foreach($sheetData as $key => &$row) {
@@ -56,36 +56,17 @@ foreach ($thefiles as $thisfile) {
 			unset($sheetData[$key]);
 		}
 	}
-	unset ($row);
+	unset($row);
 
-//var_dump($sheetData);
-
-	if ($sheetData[1]["B"] == "") {
-		if ($sheetData[1]["A"] == "") {
-			$name = "ERROR*******";
-		} else {
-			$name = $sheetData[1]["A"];
-		}
-	} else {
-		$name = $sheetData[1]["B"];
-	}
-	//echo $name.PHP_EOL;
-	
-	//REMOVE BLANK COLUMNS
-	$column = 'A';
-	$lastRow = $sheetObj->getHighestRow();
-	for ($row = 1; $row <= $lastRow; $row++) {
-    	$cell = $sheetObj->getCell($column.$row);
-		if ($cell == "") {
-			// do nothing
-		} else {
-			echo $cell.PHP_EOL;
-		}
-	}
-
-var_dump($sheetData[1]);
+foreach($sheetData as $key => $row) {
+//print count($row);
+	print sprintf("%2d ",count($row));
+}
+print PHP_EOL;
 
 	unset($sheetData);
 }
+
+
 
 ?>
