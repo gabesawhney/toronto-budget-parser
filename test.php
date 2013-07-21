@@ -14,7 +14,67 @@ set_include_path(get_include_path() . PATH_SEPARATOR . './Classes/');
 /** PHPExcel_IOFactory */
 include 'PHPExcel/IOFactory.php';
 
+$columnloop[0] = "2009 Actual";
+$columnloop[1] = "2010 Actual";
+$columnloop[2] = "2011 Budget";
+$columnloop[3] = "2011 Projected";
+$columnloop[4] = "2012 Budget";
+$columnloop[5] = "2013 Outlook";
+$columnloop[6] = "2014 Outlook";
 
+$expensesloop[] = "Contributions to Capital";
+$expensesloop[] = "Contributions to CCRF Naming Rights";
+$expensesloop[] = "Contributions to Reserve/Res Funds";
+$expensesloop[] = "Contributions to Reserve Funds";
+$expensesloop[] = "Salaries and Benefits";
+$expensesloop[] = "Cost of Sales";
+$expensesloop[] = "Equipment";
+$expensesloop[] = "Interdivisional Charges";
+$expensesloop[] = "Materials and Supplies";
+$expensesloop[] = "Other Expenditures";
+$expensesloop[] = "Services & Rents";
+
+$expenses['salaryrow'] = "Salaries and Benefits";
+$expenses['equipmentrow'] = "Equipment";
+$expenses['materialsrow'] = "Materials and Supplies";
+$expenses['salesrow'] = "Cost of Sales";
+$expenses['interdivchargesrow'] = "Interdivisional Charges";
+$expenses['capitalrow'] = "Contributions to Capital";
+$expenses['ccrfrow'] = "Contributions to CCRF Naming Rights";
+$expenses['toreserverow'] = "Contributions to Reserve/Res Funds";
+$expenses['toreservefundrow'] = "Contributions to Reserve Funds";
+$expenses['otherrow'] = "Other Expenditures";
+$expenses['servicesrow'] = "Services & Rents";
+
+$revenuesloop[] = "Interdivisional Recoveries";
+$revenuesloop[] = "Provincial Subsidies";
+$revenuesloop[] = "Federal Subsidies";
+$revenuesloop[] = "Other Subsidies";
+$revenuesloop[] = "User Fees & Donations";
+$revenuesloop[] = "Transfers from Capital Fund";
+$revenuesloop[] = "Contribution from Reserve/Res Funds";
+$revenuesloop[] = "Contributions from Reserve Funds";
+$revenuesloop[] = "Sundry Revenues";
+
+$revenues['interdivrecorow'] = "Interdivisional Recoveries";
+$revenues['provsubrow'] = "Provincial Subsidies";
+$revenues['fedsubrow'] = "Federal Subsidies";
+$revenues['othersubrow'] = "Other Subsidies";
+$revenues['userfeesrow'] = "User Fees & Donations";
+$revenues['transcaprow'] = "Transfers from Capital Fund";
+$revenues['fromreserverow'] = "Contribution from Reserve/Res Funds";
+$revenues['fromreservefundrow'] = "Contributions from Reserve Funds";
+$revenues['sundryrevrow'] = "Sundry Revenues";
+
+$outputrevenuesfilename = "revenues.csv";
+$outputexpensesfilename = "expenses.csv";
+$outputpositionsfilename = "positions.csv";
+unlink($outputrevenuesfilename);
+unlink($outputexpensesfilename);
+unlink($outputpositionsfilename);
+
+
+///////////////////////////////////////////////////
 $allfiles = scandir($datafolder);
 foreach ($allfiles as $thisfile) {
 	if ( (substr($thisfile, -3) == "xls") OR (substr($thisfile, -4) == "xlsx") ) {
@@ -28,8 +88,7 @@ foreach ($allfiles as $thisfile) {
 
 foreach ($thefiles as $thisfile) {
 	$inputFileName = $datafolder . $thisfile;
-	//$inputFileName = 'Examples/01simple.xlsx';
-	echo pathinfo($inputFileName,PATHINFO_BASENAME).": ";
+	//echo pathinfo($inputFileName,PATHINFO_BASENAME).": ";
 
 	$inputFileType = PHPExcel_IOFactory::identify($inputFileName);
 	$objReader = PHPExcel_IOFactory::createReader($inputFileType);
@@ -37,7 +96,30 @@ foreach ($thefiles as $thisfile) {
 	$objPHPExcel = $objReader->load($inputFileName);
 
 
-	$sheetObj = $objPHPExcel->getActiveSheet();
+	//identify the correct worksheet
+	$foundit = null;
+	unset($worksheetnames);
+	$worksheetarray = $objPHPExcel->getAllSheets();
+	if (count($worksheetarray) == 1) {
+		$foundit = $worksheetarray[0]->getTitle();
+	} else {
+		foreach($worksheetarray as $sheet) {
+			if ($sheet->getTitle() == "Appendix 2 - Budget by Category") { $foundit = $sheet->getTitle(); }
+			elseif ($sheet->getTitle() == "City Mgr.") { $foundit = $sheet->getTitle(); }
+			elseif ($sheet->getTitle() == "City Clerk's") { $foundit = $sheet->getTitle(); }
+			elseif ($sheet->getTitle() == "City Council") { $foundit = $sheet->getTitle(); }
+			elseif ($sheet->getTitle() == "Mayor") { $foundit = $sheet->getTitle(); }
+			elseif ($sheet->getTitle() == " Budget by Category") { $foundit = $sheet->getTitle(); }
+			elseif ($sheet->getTitle() == "Sheet1") { $foundit = $sheet->getTitle(); }
+			$worksheetnames[] = $sheet->getTitle();
+		}
+	}
+	if (is_null($foundit)) {
+		var_dump($worksheetnames);
+	}
+
+	$sheetObj = $objPHPExcel->getSheetByName($foundit);
+//	$sheetObj = $objPHPExcel->getActiveSheet();
 //	$sheetData = $sheetObj->toArray(null,true,true,true);
 
 	//get rid of empty cells
@@ -61,23 +143,146 @@ foreach ($thefiles as $thisfile) {
 	unset($row);
 */
 
-//	$search = "Salaries and Benefits";
-	$search = "alarie";
+	
+/* moved to function
+	$search = "Salaries and Benefits";
+//	$search = "alarie";
 	foreach($sheetData as $colnum => $row) {
-		foreach($row as $rownum => $cell) {
-//			if ($cell == $search) {
-//			if ( strpos($cell,$search) > 0 ) {
-			if ( preg_match('/alarie/', $cell) ) {
-				print $cell.PHP_EOL;
+		foreach($row as $rownum => $thiscell) {
+			if ( strcasecmp($thiscell,$search) == 0 ) {
+				print "[".$colnum.",".$rownum."] ".$thiscell.PHP_EOL;
+								
+				break(2);
 			} else {
-				print "NO MATCH: ".$cell.PHP_EOL;
+//				print "NO MATCH (".$colnum.",".$rownum."): ".$thiscell.PHP_EOL;
 			}
 		}
 	}
+*/
+
+	$salaryrow = findRow("Salaries and Benefits");
+	$materialsrow = findRow("Materials and Supplies");
+	$equipmentrow = findRow("Equipment");
+	$salesrow = findRow("Cost of Sales");
+	$interdivchargesrow = findRow("Interdivisional Charges");
+	$otherrow = findRow("Other Expenditures");
+	$servicesrow = findRow("Services & Rents");
+	$capitalrow = findRow("Contributions to Capital");
+	$ccrfrow = findRow("Contributions to CCRF Naming Rights");
+	$toreserverow = findRow("Contributions to Reserve/Res Funds");
+	if (is_null($toreserverow)) { $toreserverow = findRow("Contributions to Reserves"); }
+	$toreservefundrow = findRow("Contributions to Reserve Funds");
+
+	
+	$interdivrecorow = findRow("Interdivisional Recoveries");
+	$provsubrow = findRow("Provincial Subsidies");
+	$fedsubrow = findRow("Federal Subsidies");
+	$othersubrow = findRow("Other Subsidies");
+	$userfeesrow = findRow("User Fees & Donations");
+	$transcaprow = findRow("Transfers from Capital Fund");
+	$fromreserverow = findRow("Contribution from Reserve/Res Funds");
+	if (is_null($fromreserverow)) { $fromreserverow = findRow("Contribution from Reserve"); }
+	$fromreservefundrow = findRow("Contributions from Reserve Funds");
+	if (is_null($fromreservefundrow)) { $fromreservefundrow = findRow("Contribution from Reserve Funds"); }
+	$sundryrevrow = findRow("Sundry Revenues");
+
+	$approvedpositionsrow = findRow("APPROVED POSITIONS");
+
+	$actual2009col = findCol("2009","Actual");
+	$actual2010col = findCol("2010","Actual");
+	$budget2011col = $actual2010col + 1;
+	$projected2011col = findCol("2011","Projected");
+	$budget2012col = findCol("2012","Budget");
+	$outlook2013col = findCol("2013","Outlook");
+	$outlook2014col = $outlook2013col + 1;
+
+	$columnvar["2009 Actual"] = "actual2009col";
+	$columnvar["2010 Actual"] = "actual2010col";
+	$columnvar["2011 Budget"] = "budget2011col";
+	$columnvar["2011 Projected"] = "projected2011col";
+	$columnvar["2012 Budget"] = "budget2012col";
+	$columnvar["2013 Outlook"] = "outlook2013col";
+	$columnvar["2014 Outlook"] = "outlook2014col";
+
+//	print "the amount budgeted for salaries in 2012 is $".number_format($sheetData[$salaryrow][$budget2012col]*1000).PHP_EOL;
+//	print "approved positions in 2012 ".$sheetData[$approvedpositionsrow][$budget2012col].PHP_EOL;
+//	print "average salary in 2012 is $".number_format($sheetData[$salaryrow][$budget2012col]*1000/$sheetData[$approvedpositionsrow][$budget2012col]).PHP_EOL;
+
+	//output!
+	//FORMAT:	division , year , actual or projected or budget or outlook , revenue OR expense , type , amount
+
+	$division = str_replace('.xlsx','',$thisfile);
+	$division = str_replace('.xls','',$division);
+
+	foreach ($columnloop as $c) {
+		$year = substr($c,0,4);
+		$kind = substr($c,5);
+
+		//output revenues
+		$revarr = array_keys($revenues);
+		for ($i = 0; $i < count($revarr); $i++) {		
+			if (isset(${$revarr[$i]})) {
+				if (isset($sheetData[${$revarr[$i]}][${$columnvar[$c]}])) {
+						file_put_contents($outputrevenuesfilename,sprintf('"%s",%s,%s,%s,%s,%s'.PHP_EOL,$division,$year,$kind,"revenues",$revenues[$revarr[$i]], round($sheetData[${$revarr[$i]}][${$columnvar[$c]}]*1000,2) ),FILE_APPEND | LOCK_EX);
+				} else {
+//print 'ZZ ('.$division.')('.$revarr[$i].')('.$c.') isnt set: '.$sheetData[${$revarr[$i]}][${$columnvar[$c]}].PHP_EOL;
+				}
+			}
+		}
+
+		//output expenses		
+		$exparr = array_keys($expenses);
+		for ($i = 0; $i < count($exparr); $i++) {		
+			if (isset(${$exparr[$i]})) {
+				if (isset($sheetData[${$exparr[$i]}][${$columnvar[$c]}])) {
+						file_put_contents($outputexpensesfilename,sprintf('"%s",%s,%s,%s,%s,%s'.PHP_EOL,$division,$year,$kind,"expenses",$expenses[$exparr[$i]], round($sheetData[${$exparr[$i]}][${$columnvar[$c]}]*1000,2) ),FILE_APPEND | LOCK_EX);
+				} else {
+//print '** ('.$division.')('.$exparr[$i].')('.$c.') isnt set: '.$sheetData[${$exparr[$i]}][${$columnvar[$c]}].PHP_EOL;
+				}
+			}
+		}
+
+		//output positions
+		file_put_contents($outputpositionsfilename,sprintf('"%s",%s,%s,%s,%s'.PHP_EOL,$division,$year,$kind,"positions", $sheetData[$approvedpositionsrow][${$columnvar[$c]}]) ,FILE_APPEND | LOCK_EX);
+
+	}
+	
 
 	unset($sheetData);
+	unset($sheetObj);
+	unset($objReader);
+	unset($objPHPExcel);
 }
 
+function findRow($search) {
+	global $sheetData;
+	foreach($sheetData as $rownum => $row) {
+		foreach($row as $colnum => $thiscell) {
+			if ( strcasecmp($thiscell,$search) == 0 ) {
+				return $rownum; // only look for the first occurrence!
+			}
+		}
+	}
+}
 
+function findCol($search,$searchbelow) {
+	global $sheetData;
+
+	$answer = null;
+	foreach($sheetData as $rownum => $row) {
+		foreach($row as $colnum => $thiscell) {
+			if ( strpos($thiscell,$search) !== false ) {
+				if ( strcasecmp($thiscell,$search." ".$searchbelow) == 0 ) {
+					$answer = $colnum;
+				} elseif ( strcasecmp($thiscell,$search) == 0 ) {
+					if ( strpos($sheetData[$rownum+1][$colnum],$searchbelow) !== false ) {
+						$answer = $colnum;
+					}
+				}
+			}
+		}
+	}
+	return $answer;
+}
 
 ?>
