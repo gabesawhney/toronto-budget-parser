@@ -1,4 +1,26 @@
 <?php
+// Parser for City of Toronto budget
+// Written by Gabe Sawhney - gabe@pwd.ca
+//
+// The intent here was to turn a messy set of Excel documents into a machine-readable data set.
+// Source data: "Budget - Operating Budget Program Summary by Expenditure Category" 
+//  http://www1.toronto.ca/wps/portal/contentonly?vgnextoid=96c98f90dba60310VgnVCM1000003dd60f89RCRD&vgnextchannel=1a66e03bb8d1e310VgnVCM10000071d60f89RCRD
+//  Tested with the 2012 data.
+//  The script expects to find the pile of Excel documents in "../citybudget2012/"
+//
+// I won't suggest that this script is anything but a work-in-progress. There may be lots of data that it misses.
+//  Still, I've uploaded some sample data -- extracted using this parser -- to OpenSpending:
+//  http://openspending.org/ca-local-toronto
+//
+// Requires PHPExcel: http://phpexcel.codeplex.com/
+//
+// Note: I couldn't figure out how to get PHPExcel to ignore invalid links. 
+//  So in order to get this to run, you'll likely need to remove those manually. 
+//  (The script will die when it encounters one, so they're easy to find.)
+//
+// Note that there are different output options: "list", "chart" and "json". 
+//  Set the appropriate variables to get the output type(s) appropriate for your purposes.
+
 
 error_reporting(E_ALL);
 set_time_limit(0);
@@ -6,7 +28,7 @@ set_time_limit(0);
 date_default_timezone_set('America/Toronto');
 
 $datafolder = '../citybudget2012/';
-$startwithfilesthatbeginwith = 't';
+$startwithfilesthatbeginwith = 'a';
 
 /** Include path **/
 set_include_path(get_include_path() . PATH_SEPARATOR . './Classes/');
@@ -72,7 +94,7 @@ $outputpositionsfilename = "positions.csv";
 $outputchartfilename = "chart.csv";
 $outputjsonfilename = "budget2012.json";
 
-$outputaslist = 1docs.google.com/feeds/download/spreadsheets/Export?key<FILE_ID>&exportFormat=csv&gid=0;
+$outputaslist = 1;
 $outputaschart = 0;
 $outputasjson = 0;
 
@@ -103,7 +125,7 @@ foreach ($allfiles as $thisfile) {
 
 foreach ($thefiles as $thisfile) {
 	$inputFileName = $datafolder . $thisfile;
-	//echo pathinfo($inputFileName,PATHINFO_BASENAME).": ";
+//echo pathinfo($inputFileName,PATHINFO_BASENAME).": ";
 
 	$inputFileType = PHPExcel_IOFactory::identify($inputFileName);
 	$objReader = PHPExcel_IOFactory::createReader($inputFileType);
@@ -271,7 +293,7 @@ foreach ($thefiles as $thisfile) {
 //print '** ('.$division.')('.$exparr[$i].')('.$c.') isnt set: '.$sheetData[${$exparr[$i]}][${$columnvar[$c]}].PHP_EOL;
 				}
 			} else {
-print "something else (".${$exparr[$i]}.")".PHP_EOL;
+//print "something else (".${$exparr[$i]}.")".PHP_EOL;
 			}
 		}
 		//var_dump($divisionarray);
